@@ -33,3 +33,4 @@ streamlit
 urllib3
 uvicorn
 xarray
+geemap

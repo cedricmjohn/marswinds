@@ -55,10 +55,10 @@ def get_one_image(self,long:float, lat:float,data:pd.Series, quadrant:int, **kwa
     out_img = os.path.expanduser(f"../raw_data/practice_dataset/{file_name}.jpg")
 
     geemap.get_image_thumbnail(image, out_img,vis_params,dimensions=(resolution, resolution),region=roi, format='jpg')
-        
-    image_grey = cv2.imread(out_img)
-    image_grey = cv2.cvtColor(image_grey, cv2.COLOR_BGR2GRAY)
-    cv2.imwrite(f"../raw_data/practice_dataset/{file_name}.jpg",image_grey)
+    image_grey = cv2.cvtColor(cv2.imread(out_img), 
+                              cv2.COLOR_BGR2GRAY)
+    cv2.imwrite(f"../raw_data/practice_dataset/{file_name}.jpg",
+                image_grey)
         
     return None
 

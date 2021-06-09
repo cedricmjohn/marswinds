@@ -34,3 +34,4 @@ urllib3
 uvicorn
 xarray
 geemap
+opencv-python

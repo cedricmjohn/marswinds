@@ -3,13 +3,17 @@ import xarray as xr
 import cdsapi
 import os
 import numpy as np
+from sklearn.model_selection import train_test_split
 
 
-class Wind:
-    def __init__(self, outpath, file_,NWSE_coordinates):  #file_ to be given as a .nc file 
+class WindData:
+    def __init__(self, file_,NWSE_coordinates=None, 
+                 outpath='../raw_data/wind/', 
+                 image_type='dunes'):  #file_ to be given as a .nc file 
         self.outpath = outpath
-        self.file_ = file_
+        self.file_ = f'{file_}.nc'
         self.NWSE_coordinates = NWSE_coordinates
+        self.image_type=image_type
             
     def get_data_one_region(self): #NWSE passed as a list and outpath is the directory in which it will be saved
 
@@ -44,33 +48,61 @@ class Wind:
             'area': self.NWSE_coordinates,
         },
         self.outpath + self.file_)
+        
+        return self
     
     def prep_data(self):
         
         ds = xr.open_dataset(self.outpath + self.file_)
         raw_data = ds.to_dataframe()
         clean_df = raw_data.dropna().reset_index()
-        clean_df["wind strength"] = (clean_df.u10**2 + clean_df.v10**2)**.5
+        clean_df["wind_strength"] = (clean_df.u10**2 + clean_df.v10**2)**.5
         clean_df['sin'] = np.sin(np.arctan2(clean_df['u10'],clean_df['v10']))
         clean_df['cos'] = np.cos(np.arctan2(clean_df['u10'],clean_df['v10']))
         wind_data = clean_df.groupby(by=['latitude','longitude']).mean().reset_index()
+        wind_data = self.train_test_geographic_split(wind_data)
+        
         return wind_data
+    
+    def train_test_geographic_split(self, data:pd.DataFrame) -> pd.DataFrame:
+        wind_data = data.copy()
+        nb_long = wind_data.longitude.unique().shape[0]
+        nb_lat = wind_data.latitude.unique().shape[0]
+        nb_test_long = int(nb_long*.4)
+        nb_test_lat = int(nb_lat*.4)
+        
+        while nb_test_long * nb_test_lat < wind_data.shape[0]*.4:
+            nb_test_long += 1
+            if (nb_test_long * nb_test_lat < wind_data.shape[0]*.4):
+                nb_test_lat += 1
         
 
+        test_lat = np.sort(wind_data.latitude.unique())[:nb_test_lat]
+        test_long = np.sort(wind_data.longitude.unique())[:nb_test_long]
+        wind_data.loc[:,'image_type']=self.image_type
+        wind_data.loc[:,'folder']='training'
+        
+        
+        train_data = wind_data.copy()
+        test_val_data = pd.DataFrame()
 
-### THIS WAS THE NOTEBOOK CODE TO LOOP OVER AND DOWNLOAD AND PREP THE DATA AUTOMATICALLY
+        for vlat in test_lat:
+            for vlong in test_long:
+                filter_ = ((train_data.latitude == vlat) & (train_data.longitude==vlong))
+                test_val_data=pd.concat([test_val_data, train_data[filter_]])
+                train_data =train_data[~filter_].copy()
+        
+        test_val_data.loc[:,'folder']='testing' 
+        
+        if (nb_test_long*nb_test_lat<3):
+            print(f'Grid is too small to split: {nb_lat} x {nb_long}. Returning training and testing data only.')
+            return pd.concat([train_data,test_val_data])
+          
+        test_data, val_data = train_test_split(test_val_data, test_size=0.3)   
+        test_data.loc[:,'folder']='testing'
+        val_data.loc[:,'folder']='validation'
 
-# final_df = pd.DataFrame()        
-# for i in data_list:
-#     NWSE_coordinates = [i[1], i[2], i[3], i[4]]
-#     wind = Wind(outpath = 'Downloads/', file_ = f'{i[0]}.nc', NWSE_coordinates = NWSE_coordinates)
-#     wind.get_data_one_region()
-#     clean_df = wind.prep_data()
-    
-#     final_df = pd.concat([final_df, clean_df], axis = 0)
-#     print("done",i[0])
+        return pd.concat([train_data,test_data,val_data])
+        
 
-wind = Wind(outpath = 'marswinds/data/wind_data/', file_ = 'test4.nc', NWSE_coordinates = [90, -10, 80, 10,])
-  
-print(wind.get_data_one_region())
 

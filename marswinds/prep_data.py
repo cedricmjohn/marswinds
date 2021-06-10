@@ -17,7 +17,7 @@ class DataPreparation:
         self.image_type=image_type
         
         if clean_download:
-            os.rmdir(f'../raw_data/images/{self.image_type}')
+            os.rmdir(f'../raw_data/images')
             
         
     
@@ -131,7 +131,8 @@ class DataPreparation:
     
     
 if __name__ == '__main__':
-    data_handler = DataPreparation(image_type='dunes') #replace by 'no_dunes' to fetch rocks
-    data_handler.fetch_all_data().rotate_images()
+    data_handler = DataPreparation(image_type='dunes') # replace by no_dunes for rocks
+    #data_handler.fetch_all_data()
+    data_handler.rotate_images()
     #data_handler.rotate_images()
     

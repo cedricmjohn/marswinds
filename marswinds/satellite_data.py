@@ -43,7 +43,7 @@ class SatelliteData:
         collection = ee.ImageCollection(satellite_name) \
                 .filterBounds(roi) \
                 .filter('HIGH_PROBA_CLOUDS_PERCENTAGE < 1') \
-                .filter('NODATA_PIXEL_PERCENTAGE < 1') \
+                .filter('NODATA_PIXEL_PERCENTAGE == 0') \
                 .limit(1)
 
         image = collection.first()

@@ -12,14 +12,12 @@ from marswinds.wind_data import WindData
 
 class DataPreparation:
     def __init__(self,nb_lines=None, image_type='dunes', 
-                 clean_download=False,
-                 auto_rotate=True):
+                 clean_download=False):
         self.nb_lines=nb_lines
         self.image_type=image_type
-        self.auto_rotate = auto_rotate
         
         if clean_download:
-            os.rmdir(f'../raw_data/images/{self.image_type}')
+            os.rmdir(f'../raw_data/images')
             
         
     
@@ -48,9 +46,6 @@ class DataPreparation:
             for data_index in wind_data.index.values:
                 data = wind_data.iloc[data_index,:]
                 SatelliteData(data).get_image_per_coordinates()
-        
-        if self.auto_rotate:
-            self.rotate_images()
             
         return self                 
     
@@ -136,7 +131,8 @@ class DataPreparation:
     
     
 if __name__ == '__main__':
-    data_handler = DataPreparation(image_type='dunes') #replace by 'no_dunes' to fetch rocks
-    data_handler.fetch_all_data()
+    data_handler = DataPreparation(image_type='dunes') # replace by no_dunes for rocks
+    #data_handler.fetch_all_data()
+    data_handler.rotate_images()
     #data_handler.rotate_images()
     

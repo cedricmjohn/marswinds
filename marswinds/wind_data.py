@@ -58,6 +58,18 @@ class Wind:
         
 
 
+### THIS WAS THE NOTEBOOK CODE TO LOOP OVER AND DOWNLOAD AND PREP THE DATA AUTOMATICALLY
+
+# final_df = pd.DataFrame()        
+# for i in data_list:
+#     NWSE_coordinates = [i[1], i[2], i[3], i[4]]
+#     wind = Wind(outpath = 'Downloads/', file_ = f'{i[0]}.nc', NWSE_coordinates = NWSE_coordinates)
+#     wind.get_data_one_region()
+#     clean_df = wind.prep_data()
+    
+#     final_df = pd.concat([final_df, clean_df], axis = 0)
+#     print("done",i[0])
+
 wind = Wind(outpath = 'marswinds/data/wind_data/', file_ = 'test4.nc', NWSE_coordinates = [90, -10, 80, 10,])
   
 print(wind.get_data_one_region())

@@ -70,13 +70,18 @@ class WindData:
         nb_lat = wind_data.latitude.unique().shape[0]
         nb_test_long = int(nb_long*.4)
         nb_test_lat = int(nb_lat*.4)
+        
+        while nb_test_long * nb_test_lat < wind_data.shape[0]*.4:
+            nb_test_long += 1
+            if (nb_test_long * nb_test_lat < wind_data.shape[0]*.4):
+                nb_test_lat += 1
+        
 
         test_lat = np.sort(wind_data.latitude.unique())[:nb_test_lat]
         test_long = np.sort(wind_data.longitude.unique())[:nb_test_long]
         wind_data.loc[:,'image_type']=self.image_type
         wind_data.loc[:,'folder']='training'
         
-        print(f'{nb_test_long} x {nb_test_lat}')
         
         train_data = wind_data.copy()
         test_val_data = pd.DataFrame()

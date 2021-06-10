@@ -11,9 +11,12 @@ from marswinds.wind_data import WindData
     
 
 class DataPreparation:
-    def __init__(self,nb_lines=None, image_type='dunes', clean_download=False):
+    def __init__(self,nb_lines=None, image_type='dunes', 
+                 clean_download=False,
+                 auto_rotate=True):
         self.nb_lines=nb_lines
         self.image_type=image_type
+        self.auto_rotate = auto_rotate
         
         if clean_download:
             os.rmdir(f'../raw_data/images/{self.image_type}')
@@ -46,6 +49,9 @@ class DataPreparation:
                 data = wind_data.iloc[data_index,:]
                 SatelliteData(data).get_image_per_coordinates()
         
+        if self.auto_rotate:
+            self.rotate_images()
+            
         return self                 
     
     def fetch_wind_only(self):
@@ -79,14 +85,14 @@ class DataPreparation:
         return self
     
     def rotate_images(self):
-        base_path = '../raw_data/image/training'
+        base_path = '../raw_data/images/training'
         
         mypath=f'{base_path}/{self.image_type}'
         try:
             list_of_images =  [f for f in listdir(mypath) if isfile(join(mypath, f))]
             print(f'Now applying rotation to {len(list_of_images)} files')
         except:
-            print(f'No rotation applied (check if the folder is empty)')
+            print(f'No rotation applied (check if the {mypath} is empty)')
             return self
         
         for image_name in list_of_images:
@@ -130,7 +136,7 @@ class DataPreparation:
     
     
 if __name__ == '__main__':
-    data_handler = DataPreparation(1, image_type='dunes')
-    data_handler.fetch_all_data().rotate_images()
-    #data_handler.fetch_images_only(0)
+    data_handler = DataPreparation(image_type='dunes') #replace by 'no_dunes' to fetch rocks
+    data_handler.fetch_all_data()
+    #data_handler.rotate_images()
     

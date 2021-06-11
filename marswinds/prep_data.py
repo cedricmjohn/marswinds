@@ -8,13 +8,32 @@ from os.path import isfile, join
 import cv2
 from marswinds.satellite_data import SatelliteData
 from marswinds.wind_data import WindData
+import datetime
     
 
 class DataPreparation:
     def __init__(self,nb_lines=None, image_type='dunes', 
                  clean_download=False):
         self.nb_lines=nb_lines
-        self.image_type=image_type
+        self.image_type=image_type 
+        current_time = datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S")
+        self.logfile = f'../raw_data/logs/{current_time}.csv'
+        
+        
+        if not os.path.exists('../raw_data/logs'):
+            os.makedirs('../raw_data/logs')
+        
+        d = {"time":[],
+            "image_latitude":[],
+            "image_longitude":[],
+            "SENTINEL_available":[],
+            "SENTINEL_complete":[],
+            "LANDSAT_available":[],
+            "LANDSAT_complete":[],
+            "file_name":[]
+        }
+        pd.DataFrame.from_dict(d).to_csv(self.logfile,index=False)
+         
         
         if clean_download:
             os.rmdir(f'../raw_data/images')
@@ -45,7 +64,7 @@ class DataPreparation:
             
             for data_index in wind_data.index.values:
                 data = wind_data.iloc[data_index,:]
-                SatelliteData(data).get_image_per_coordinates()
+                SatelliteData(data,self.logfile).get_image_per_coordinates()
             
         return self                 
     
@@ -132,7 +151,7 @@ class DataPreparation:
     
 if __name__ == '__main__':
     data_handler = DataPreparation(image_type='dunes') # replace by no_dunes for rocks
-    #data_handler.fetch_all_data()
-    data_handler.rotate_images()
+    data_handler.fetch_all_data()
+    #data_handler.rotate_images()
     #data_handler.rotate_images()
     

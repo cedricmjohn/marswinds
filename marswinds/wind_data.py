@@ -68,12 +68,12 @@ class WindData:
         wind_data = data.copy()
         nb_long = wind_data.longitude.unique().shape[0]
         nb_lat = wind_data.latitude.unique().shape[0]
-        nb_test_long = int(nb_long*.4)
-        nb_test_lat = int(nb_lat*.4)
+        nb_test_long = 0
+        nb_test_lat = 0
         
-        while nb_test_long * nb_test_lat < wind_data.shape[0]*.4:
+        while nb_test_long * nb_test_lat < wind_data.shape[0]*.3:
             nb_test_long += 1
-            if (nb_test_long * nb_test_lat < wind_data.shape[0]*.4):
+            if (nb_test_long * nb_test_lat < wind_data.shape[0]*.3):
                 nb_test_lat += 1
         
 

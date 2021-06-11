@@ -57,8 +57,8 @@ class WindData:
         raw_data = ds.to_dataframe()
         clean_df = raw_data.dropna().reset_index()
         clean_df["wind_strength"] = (clean_df.u10**2 + clean_df.v10**2)**.5
-        clean_df['sin'] = np.sin(np.arctan2(clean_df['u10'],clean_df['v10']))
-        clean_df['cos'] = np.cos(np.arctan2(clean_df['u10'],clean_df['v10']))
+        clean_df['sin'] = np.sin(np.arctan2(clean_df['v10'],clean_df['u10']))
+        clean_df['cos'] = np.cos(np.arctan2(clean_df['v10'],clean_df['u10']))
         wind_data = clean_df.groupby(by=['latitude','longitude']).mean().reset_index()
         wind_data = self.train_test_geographic_split(wind_data)
         
@@ -68,12 +68,12 @@ class WindData:
         wind_data = data.copy()
         nb_long = wind_data.longitude.unique().shape[0]
         nb_lat = wind_data.latitude.unique().shape[0]
-        nb_test_long = int(nb_long*.4)
-        nb_test_lat = int(nb_lat*.4)
+        nb_test_long = 0
+        nb_test_lat = 0
         
-        while nb_test_long * nb_test_lat < wind_data.shape[0]*.4:
+        while nb_test_long * nb_test_lat < wind_data.shape[0]*.3:
             nb_test_long += 1
-            if (nb_test_long * nb_test_lat < wind_data.shape[0]*.4):
+            if (nb_test_long * nb_test_lat < wind_data.shape[0]*.3):
                 nb_test_lat += 1
         
 

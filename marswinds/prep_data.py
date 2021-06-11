@@ -25,12 +25,15 @@ class DataPreparation:
         
         d = {"time":[],
             "image_latitude":[],
-            "image_longitude":[],
+            "image_longitude":[],   
+             "satellite":[],
+            "image_type":[],
+            "pixel_resolution":[],
+            "file_name":[],
             "SENTINEL_available":[],
             "SENTINEL_complete":[],
             "LANDSAT_available":[],
             "LANDSAT_complete":[],
-            "file_name":[]
         }
         pd.DataFrame.from_dict(d).to_csv(self.logfile,index=False)
          
@@ -123,7 +126,6 @@ class DataPreparation:
         label = image_name.split('/')[-1]
         original_sin = float(label.split('_')[-3])
         original_cos = float(label.split('_')[-2])
-        original_strength = label.split('_')[-1]
         original_angle = math.atan2(original_sin, original_cos)
         original_angle *= 180 / math.pi
         if original_angle < 0: original_angle += 360
@@ -132,8 +134,9 @@ class DataPreparation:
             rota = rotation[1]
             new_angle = original_angle + rota
             if new_angle > 360: original_angle -= 360
-            new_sin = np.sin(new_angle)
-            new_cos = np.cos(new_angle)
+            rad_angle = math.pi * new_angle / 180
+            new_sin = np.sin(rad_angle)
+            new_cos = np.cos(rad_angle)
             name_tags = label.split('_')
             name_tags[-4] = rotation[2]
             name_tags[-3] = str(new_sin)
@@ -150,7 +153,7 @@ class DataPreparation:
     
     
 if __name__ == '__main__':
-    data_handler = DataPreparation(image_type='dunes') # replace by no_dunes for rocks
+    data_handler = DataPreparation(image_type='no_dunes') # replace by no_dunes for rocks
     data_handler.fetch_all_data()
     #data_handler.rotate_images()
     #data_handler.rotate_images()

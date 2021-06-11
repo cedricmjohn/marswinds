@@ -5,3 +5,6 @@
 raw_data/
 **/__pycache__/
 .env
+*Zone.Identifier
+.vscode
+ignore_this/

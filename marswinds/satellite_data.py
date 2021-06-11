@@ -67,17 +67,16 @@ class SatelliteData:
             os.makedirs('../raw_data/tmp')
     
         
-        sentinel_available = 'not checked'
-        landsat_available = 'not checked'
-        sentinel_complete = 'not checked'
-        landsat_complete = 'not checked'
+        sentinel_available = False
+        landsat_available = False
+        sentinel_complete = False
+        landsat_complete = False
 
         try:
             geemap.get_image_thumbnail(image, tmp_img,vis_params,dimensions=(resolution, resolution),region=roi, format='jpg')
-            sentinel_available='yes'
+            sentinel_available=True
         except:
-            print("Cannot fetch image from Sentinel, attempting to fetch from Landsat (30 m resolution)")
-            sentinel_available='no'
+            print("Cannot fetch image from Sentinel, attempting to fetch from Landsat")
             collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR') \
                 .filterBounds(roi) \
                 .filter('CLOUD_COVER < 1') \
@@ -86,19 +85,19 @@ class SatelliteData:
             image = collection.first()
             try:
                 geemap.get_image_thumbnail(image, tmp_img,vis_params,dimensions=(resolution, resolution),region=roi, format='jpg')
-                landsat_available = 'yes'
+                landsat_available = True
             except:
                 print("Cannot fetch image from either satellites")
-                landsat_available='no'
         
-        if((sentinel_available=='yes') or (landsat_available=='yes')):
+        
+        if(sentinel_available or landsat_available):
             im = cv2.imread(tmp_img)
             tot_pix = im.shape[0]*im.shape[1]*im.shape[2]
             missing_pix = im[np.where(im == 0)].shape[0]
-            if (missing_pix/tot_pix > 0.1) & (landsat_available=='not checked'):
+            sentinel_complete=True
+            if (missing_pix/tot_pix > 0.05):
                 print("Too much information missing from picture, trying to fetch from Landsat 8")
-                sentinel_complete='no'
-                landsat_complete='no'
+                sentinel_complete=False
                 collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR') \
                     .filterBounds(roi) \
                     .filter('CLOUD_COVER < 1') \
@@ -108,17 +107,16 @@ class SatelliteData:
                 try:
                     geemap.get_image_thumbnail(image, tmp_img,vis_params,dimensions=(resolution, resolution),region=roi, format='jpg')
                     im = cv2.imread(tmp_img)
-                    landsat_available = 'yes'
-                    landsat_complete='yes'
+                    landsat_available = True
+                    landsat_complete= True
                     tot_pix = im.shape[0]*im.shape[1]*im.shape[2]
                     missing_pix = im[np.where(im == 0)].shape[0]
-                    if missing_pix/tot_pix > 0.1:
-                        landsat_complete='no'
+                    if missing_pix/tot_pix > 0.05:
+                        landsat_complete=False
                 except:
                     print("Cannot fetch image from Landstat 8")
-                    landsat_available = 'no'
-        
-        if (sentinel_complete=='yes') | (landsat_complete == 'yes'):
+
+        if (sentinel_complete| landsat_complete ):
             im = cv2.imread(tmp_img)
             gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
             cv2.imwrite(out_img,gray)
@@ -127,16 +125,25 @@ class SatelliteData:
         
         log = pd.read_csv(self.logfile)
         
+        if sentinel_complete:
+            sat = 'Sentinel-2'
+            pxres = '10m'
+        else:
+            sat = 'Landsat-8'
+            pxres = '30m'
+            
         d = {"time":[datetime.datetime.now().strftime("%d-%b-%Y-%H:%M:%S.%f")],
             "image_latitude":[lat],
             "image_longitude":[long],
+            "satellite":[sat], 
+            "image_type":[self.data.image_type],
+            "pixel_resolution":[pxres],
+            "file_name":[file_name],
             "SENTINEL_available":[sentinel_available],
             "SENTINEL_complete":[sentinel_complete],
             "LANDSAT_available":[landsat_available],
-            "LANDSAT_complete":[landsat_complete],
-            "file_name":[file_name]
+            "LANDSAT_complete":[landsat_complete]
         }
-
         added_log = pd.concat([pd.DataFrame.from_dict(d),
                                log])
         added_log.to_csv(self.logfile,index=False)       

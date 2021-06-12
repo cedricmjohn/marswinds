@@ -46,6 +46,7 @@ class WindData:
             ],
             'time': '00:00',
             'area': self.NWSE_coordinates,
+            'grid':['0.1', '0.1'],
         },
         self.outpath + self.file_)
         

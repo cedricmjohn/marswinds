@@ -9,17 +9,23 @@ import datetime
 
 class SatelliteData:
     
-    def __init__(self, data,logfile):
+    def __init__(self, data,logfile, force_download=False):
         self.data = data
         self.logfile = logfile
+        self.force_download = force_download
             
     def get_image_per_coordinates(self, **kwargs) -> list:
     
-            coordinates = [
-              (self.data.longitude+0.025,self.data.latitude+0.025,1),
-              (self.data.longitude-0.025,self.data.latitude+0.025,2),
-              (self.data.longitude-0.025,self.data.latitude-0.025,3),
-              (self.data.longitude+0.025,self.data.latitude-0.025,4)]
+            coordinates = []
+            increment = 0.025
+            offset = 0.0375
+            for row in range(4):
+                lat_diff=offset-row*increment
+                new_row = []
+                for col in range(4):
+                    long_diff=-offset+col*increment
+                    coordinates.append((self.data.longitude+long_diff,self.data.latitude+lat_diff,row*10+col))
+
         
             for coordinate in coordinates:
                 self.get_one_image(long=coordinate[0], lat=coordinate[1], data=self.data, quadrant=coordinate[2])
@@ -32,11 +38,24 @@ class SatelliteData:
         if 'resolution' in kwargs.keys():
             resolution=int(kwargs['resolution'])
         else:
-            resolution = 512
+            resolution = 256
     
-        area = [(long-0.025,lat-0.025),
-            (long+0.025,lat+0.025)] 
-        print(f'Fetching {lat}/{long}')     
+        area = [(long-0.0125,lat-0.0125),
+            (long+0.0125,lat+0.0125)]  
+        
+        image_name = f"{lat}_{long}_0{quadrant}_CW000_{self.data.sin}_{self.data.cos}_{self.data.wind_strength}"
+        folder_name = f"../raw_data/images/{self.data.folder}/{self.data.image_type}"
+        file_name = f"{folder_name}/{image_name}.jpg"
+        
+        out_img = os.path.expanduser(file_name)
+        tmp_img = os.path.expanduser('../raw_data/tmp/tmp.jpg')
+
+        if (not self.force_download) and (os.path.exists(file_name)):
+            print(f'Image for {lat}/{long} already exists in {self.data.folder}')
+            return self
+        else:
+            print(f'Fetching {lat}/{long}')
+           
         roi = ee.Geometry.Rectangle(coords=area)  
         vis_params = {'bands': [ 'B4','B3','B2'],
                   'min': 0,
@@ -53,12 +72,6 @@ class SatelliteData:
                 .limit(10)
 
         image = collection.first()
-        image_name = f"{lat}_{long}_0{quadrant}_CW000_{self.data.sin}_{self.data.cos}_{self.data.wind_strength}"
-        folder_name = f"../raw_data/images/{self.data.folder}/{self.data.image_type}"
-        file_name = f"{folder_name}/{image_name}.jpg"
-        
-        out_img = os.path.expanduser(file_name)
-        tmp_img = os.path.expanduser('../raw_data/tmp/tmp.jpg')
         
         
         if not os.path.exists(folder_name):
@@ -136,7 +149,7 @@ class SatelliteData:
             "image_latitude":[lat],
             "image_longitude":[long],
             "satellite":[sat], 
-            "image_type":[self.data.image_type],
+            "label":[self.data.folder],
             "pixel_resolution":[pxres],
             "file_name":[file_name],
             "SENTINEL_available":[sentinel_available],

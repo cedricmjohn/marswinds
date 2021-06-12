@@ -13,11 +13,12 @@ import datetime
 
 class DataPreparation:
     def __init__(self,nb_lines=None, image_type='dunes', 
-                 clean_download=False):
+                 force_download=False):
         self.nb_lines=nb_lines
         self.image_type=image_type 
         current_time = datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S")
         self.logfile = f'../raw_data/logs/{current_time}.csv'
+        self.force_download=force_download
         
         
         if not os.path.exists('../raw_data/logs'):
@@ -26,8 +27,8 @@ class DataPreparation:
         d = {"time":[],
             "image_latitude":[],
             "image_longitude":[],   
-             "satellite":[],
-            "image_type":[],
+            "satellite":[],
+            "label":[],
             "pixel_resolution":[],
             "file_name":[],
             "SENTINEL_available":[],
@@ -37,9 +38,6 @@ class DataPreparation:
         }
         pd.DataFrame.from_dict(d).to_csv(self.logfile,index=False)
          
-        
-        if clean_download:
-            os.rmdir(f'../raw_data/images')
             
         
     
@@ -67,7 +65,7 @@ class DataPreparation:
             
             for data_index in wind_data.index.values:
                 data = wind_data.iloc[data_index,:]
-                SatelliteData(data,self.logfile).get_image_per_coordinates()
+                SatelliteData(data,self.logfile, force_download=self.force_download).get_image_per_coordinates()
             
         return self                 
     
@@ -84,6 +82,8 @@ class DataPreparation:
             item = coordinates.iloc[index,:]
             print(f'Now fetching {item.region}')
             print(item)
+            print(item.region)
+            print(item.north, item.west,item.south, item.east)
             wind_data = WindData(file_=item.region,
                                  NWSE_coordinates = [item.north,
                                   item.west,
@@ -153,7 +153,8 @@ class DataPreparation:
     
     
 if __name__ == '__main__':
-    data_handler = DataPreparation(image_type='no_dunes') # replace by no_dunes for rocks
+    data_handler = DataPreparation(image_type='dunes', # replace by no_dunes for rocks
+                                   force_download=False) # replace by True if you want to delete image previously downloaded
     data_handler.fetch_all_data()
     #data_handler.rotate_images()
     #data_handler.rotate_images()

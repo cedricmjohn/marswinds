@@ -12,37 +12,69 @@ import datetime
     
 
 class DataPreparation:
+    
     def __init__(self,nb_lines=None, image_type='dunes', 
-                 force_download=False):
+                 force_download=False,
+                 resume_log=None):
         self.nb_lines=nb_lines
         self.image_type=image_type 
         current_time = datetime.datetime.now().strftime("%d-%b-%Y-%H-%M-%S")
-        self.logfile = f'../raw_data/logs/{current_time}.csv'
         self.force_download=force_download
         
+        if resume_log != None:
+            self.logfile = f'../raw_data/logs/{resume_log}.csv'
+        else:
+            if not os.path.exists('../raw_data/logs'):
+                os.makedirs('../raw_data/logs')
         
-        if not os.path.exists('../raw_data/logs'):
-            os.makedirs('../raw_data/logs')
-        
-        d = {"time":[],
-            "image_latitude":[],
-            "image_longitude":[],   
-            "satellite":[],
-            "label":[],
-            "pixel_resolution":[],
-            "file_name":[],
-            "SENTINEL_available":[],
-            "SENTINEL_complete":[],
-            "LANDSAT_available":[],
-            "LANDSAT_complete":[],
-        }
-        pd.DataFrame.from_dict(d).to_csv(self.logfile,index=False)
+            d = {"time":[],
+                "image_latitude":[],
+                "image_longitude":[],   
+                "satellite":[],
+                "label":[],
+                "pixel_resolution":[],
+                "file_name":[],
+                "SENTINEL_available":[],
+                "SENTINEL_complete":[],
+                "LANDSAT_available":[],
+                "LANDSAT_complete":[],
+            }
+            pd.DataFrame.from_dict(d).to_csv(self.logfile,index=False)
          
-            
+    def get_last_region(self, lat, long):
+        regions = pd.read_csv(f'../raw_data/lists/{self.image_type}.csv')
+        last_index = 0
         
+        for idx in  regions.index.values:
+            region = regions.iloc[idx,:]
+            if (((region.north > lat) and (region.south < lat)) and ((region.west < long) and (region.east > long))):
+                last_index=idx
+
+        return regions.loc[last_index::,:]
+    
+    def get_last_cell(self, lat, long, wind_data):
+        last_index = 0
+        
+        for idx in  wind_data.index.values:
+            current_lat = wind_data.iloc[idx,:]['latitude']
+            current_long = wind_data.iloc[idx,:]['longitude']
+            if (((current_lat-0.05 < lat) and (current_lat+0.05 > lat))): 
+                if ((current_long-0.05 < long) and (current_long+0.05 > long)):
+                    last_index=idx
+                    
+        return wind_data.loc[last_index::,:]
+                
     
     def fetch_all_data(self):
         df = pd.read_csv(f'../raw_data/lists/{self.image_type}.csv')
+        
+        log =pd.read_csv(self.logfile)
+        
+        if log.shape[0] > 0:
+            lat = log.iloc[0,:].image_latitude
+            long = log.iloc[0,:].image_longitude
+            df = self.get_last_region(lat,long).reset_index()
+            set_continue_download_flag = True
         
         if self.nb_lines:
             coordinates = df.head(self.nb_lines).copy()
@@ -62,6 +94,15 @@ class DataPreparation:
                                  image_type=self.image_type) \
                         .get_data_one_region() \
                         .prep_data()
+            if set_continue_download_flag:
+                last_lat = log.iloc[0,:].image_latitude
+                last_long = log.iloc[0,:].image_longitude
+                wind_data = self.get_last_cell(last_lat, last_long,wind_data)
+                start_lat = wind_data.iloc[0,:]['latitude']
+                start_long = wind_data.iloc[0,:]['longitude']
+                print(f'Starting to download from coordinates {start_lat}/{start_long}')
+                set_continue_download_flag = False
+                self.force_download=False
             
             for data_index in wind_data.index.values:
                 data = wind_data.iloc[data_index,:]
@@ -154,7 +195,8 @@ class DataPreparation:
     
 if __name__ == '__main__':
     data_handler = DataPreparation(image_type='dunes', # replace by no_dunes for rocks
-                                   force_download=False) # replace by True if you want to delete image previously downloaded
+                                   force_download=False,
+                                   resume_log='11-Jun-2021-21-04-50') # replace by True if you want to delete image previously downloaded
     data_handler.fetch_all_data()
     #data_handler.rotate_images()
     #data_handler.rotate_images()

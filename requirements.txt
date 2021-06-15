@@ -34,3 +34,6 @@ urllib3
 uvicorn
 xarray
 tensorflow
+geemap
+opencv-python
+

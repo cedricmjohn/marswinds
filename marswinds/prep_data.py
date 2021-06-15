@@ -97,7 +97,7 @@ class DataPreparation:
             if set_continue_download_flag:
                 last_lat = log.iloc[0,:].image_latitude
                 last_long = log.iloc[0,:].image_longitude
-                wind_data = self.get_last_cell(last_lat, last_long,wind_data)
+                wind_data = self.get_last_cell(last_lat, last_long,wind_data).reset_index()
                 start_lat = wind_data.iloc[0,:]['latitude']
                 start_long = wind_data.iloc[0,:]['longitude']
                 print(f'Starting to download from coordinates {start_lat}/{start_long}')

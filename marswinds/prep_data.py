@@ -78,6 +78,8 @@ class DataPreparation:
             long = log.iloc[0,:].image_longitude
             df = self.get_last_region(lat,long).reset_index()
             set_continue_download_flag = True
+        else:
+            set_continue_download_flag = False
         
         if self.nb_lines:
             coordinates = df.head(self.nb_lines).copy()

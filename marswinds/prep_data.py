@@ -199,9 +199,9 @@ class DataPreparation:
     
     
 if __name__ == '__main__':
-    data_handler = DataPreparation(image_type='no_dunes', # replace by no_dunes for rocks
+    data_handler = DataPreparation(image_type='dunes', # replace by no_dunes for rocks
                                    force_download=False) # replace by True if you want to delete image previously downloaded
-    data_handler.fetch_all_data()
-    #data_handler.rotate_images()
+    #data_handler.fetch_all_data()
+    data_handler.rotate_images()
     #data_handler.rotate_images()
     

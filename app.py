@@ -8,7 +8,6 @@ import time
 import os
 import base64
 import imageio 
-import cv2
 from marswinds.predict import Predictor
 
 st.set_page_config(layout="wide", 
@@ -21,9 +20,6 @@ imgsize = 256
 #Information
 side= ['Horizontal side', 'Vertical side']
 
-#Import model
-model_class = keras.models.load_model("raw_data/trained_models/classifier.h5")
-model_reg = keras.models.load_model("raw_data/trained_models/regressor.h5")
 
 #logo at the top of page
 image = Image.open('website/ESP_015917_2650.jpg')
@@ -47,7 +43,6 @@ if st.sidebar.checkbox('Insert side dimension of image'):
     
 uploaded_file = st.sidebar.file_uploader("Choose a photo of dunes in Mars*")
 
-st.markdown(uploaded_file)
 if uploaded_file:
     image_1 = imageio.imread(uploaded_file)
 
@@ -55,13 +50,9 @@ st.sidebar.markdown(f"""
 /* Mandatory field
     """)
 
-st.markdown("<h1 style='text-align: center;'>Mapping Martian Winds</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;color: rgb(138, 19, 11);'>Mapping Martian Winds</h1>", unsafe_allow_html=True)
 
 #Description text
-
-st.markdown(
-os.getcwd()
-)
 
 if image_1 is not None:
 
@@ -82,32 +73,30 @@ if image_1 is not None:
     
     st.image(uploaded_file, caption=f"Pixel dimension: {pixel_dim} m/px", use_column_width=True)
     # img = Image.load_img(uploaded_file)
-    st.markdown(image_1)
-    st.markdown(image_1.shape)
-    st.markdown(type(image_1))
-    prediction = st.button('Prediction')
+    prediction = st.button('Predict')
     if prediction:
         with st.spinner('Wait for it...'):
-            time.sleep(5)
+            time.sleep(190)
             st.success('Done!')
-        image, data= Predictor().get_prediction_image(image_1, pixel_dim)
-        pred_image = Image.open(image)
+        image_pred, data= Predictor().get_prediction_image(image_1, pixel_dim)
+        pred_image = Image.open(image_pred)
         st.image(pred_image,caption ='', use_column_width=True)
         st.write(data)
-        # download=st.button('Download data')
-        # if download:
-        #     'Download started'
-        #     # list = ['A','B','C']
-        #     # data = pd.DataFrame(list) #result from function
-        #     # data.columns=['Title']
-        #     data
-        #     csv=data.to_csv(index=False)
-        #     b64 = base64.b64encode(csv.encode()).decode()  # some strings
-        #     link= f'<a href="data:file/csv;base64,{b64}" download="data.csv">Download csv file</a>'
-        #     st.markdown(link, unsafe_allow_html=True)
-        #     st.image(pred_image, caption='', use_column_width=True)
+        csv=data.to_csv(index=False)
+        b64 = base64.b64encode(csv.encode()).decode()  # some strings
+        link= f'<a href="data:file/csv;base64,{b64}" download="data.csv">Download csv file</a>'
+        st.markdown(link, unsafe_allow_html=True)
+            
+#               liste= ['A','B','C']
+#   df_download= pd.DataFrame(liste)
+#   df_download.columns=['Title']
+#   df_download
+#   csv = df_download.to_csv(index=False)
+#   b64 = base64.b64encode(csv.encode()).decode()  # some strings
+# #   linko= f'<a href="data:file/csv;base64,{b64}" download="myfilename.csv">Download csv file</a>'
+#   st.markdown(link, unsafe_allow_html=True)
 else:
-    st.markdown('Please upload image and fill information requested')
+    st.markdown('Please upload image and fill information requested.')
 
     
 

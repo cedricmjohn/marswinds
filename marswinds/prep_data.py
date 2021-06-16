@@ -26,6 +26,8 @@ class DataPreparation:
         else:
             if not os.path.exists('../raw_data/logs'):
                 os.makedirs('../raw_data/logs')
+            self.logfile = f'../raw_data/logs/{current_time}.csv'
+            
         
             d = {"time":[],
                 "image_latitude":[],
@@ -39,6 +41,7 @@ class DataPreparation:
                 "LANDSAT_available":[],
                 "LANDSAT_complete":[],
             }
+            
             pd.DataFrame.from_dict(d).to_csv(self.logfile,index=False)
          
     def get_last_region(self, lat, long):
@@ -75,6 +78,8 @@ class DataPreparation:
             long = log.iloc[0,:].image_longitude
             df = self.get_last_region(lat,long).reset_index()
             set_continue_download_flag = True
+        else:
+            set_continue_download_flag = False
         
         if self.nb_lines:
             coordinates = df.head(self.nb_lines).copy()
@@ -195,9 +200,8 @@ class DataPreparation:
     
 if __name__ == '__main__':
     data_handler = DataPreparation(image_type='dunes', # replace by no_dunes for rocks
-                                   force_download=False,
-                                   resume_log='11-Jun-2021-21-04-50') # replace by True if you want to delete image previously downloaded
-    data_handler.fetch_all_data()
-    #data_handler.rotate_images()
+                                   force_download=False) # replace by True if you want to delete image previously downloaded
+    #data_handler.fetch_all_data()
+    data_handler.rotate_images()
     #data_handler.rotate_images()
     

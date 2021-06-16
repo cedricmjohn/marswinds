@@ -49,7 +49,9 @@ uploaded_file = st.sidebar.file_uploader("Choose a photo of dunes in Mars*")
 
 st.markdown(uploaded_file)
 if uploaded_file:
+    base_image_path = 'website/prediction/base_image.jpg'
     image_1 = imageio.imread(uploaded_file)
+    imageio.imwrite(base_image_path,image_1)
 
 st.sidebar.markdown(f"""
 /* Mandatory field
@@ -90,7 +92,7 @@ if image_1 is not None:
         with st.spinner('Wait for it...'):
             time.sleep(5)
             st.success('Done!')
-        image, data= Predictor().get_prediction_image(image_1, pixel_dim)
+        image, data= Predictor().get_prediction_image(base_image_path, pixel_dim)
         pred_image = Image.open(image)
         st.image(pred_image,caption ='', use_column_width=True)
         st.write(data)

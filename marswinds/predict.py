@@ -7,6 +7,7 @@ import math
 from marswinds.utils import radian_to_degree, degree_to_radian
 from tensorflow.keras.models import load_model
 import joblib
+import imageio
 
 class Predictor:
     
@@ -183,4 +184,5 @@ class Predictor:
     
 if __name__ == '__main__':
     predictor = Predictor()
-    predictor.get_prediction_image('raw_data/mars_images/test_image.jpg',5)
+    image = imageio.imread('raw_data/mars_images/test_image.jpg')
+    predictor.get_prediction_image(image,5)

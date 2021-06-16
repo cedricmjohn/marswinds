@@ -18,7 +18,7 @@ class Predictor:
     
     def prediction_from_models(self, tile):
 
-        if len(tile.shape)==3:
+        if len(tile.shape)>=3:
             grey_image = cv2.cvtColor(tile, cv2.COLOR_RGB2GRAY) / 255.0
         else:
             grey_image = tile
@@ -38,7 +38,7 @@ class Predictor:
         
         return (class_proba,wind_strength, angle_rad)
     
-    def add_arrows(self, img, ax, col, row, dim_factor):
+    def add_arrows(self, img, ax, col, row):
     
         dune_proba, wind_strength_norm, original_angle = self.prediction_from_models(img)
     
@@ -116,7 +116,7 @@ class Predictor:
         for col in range(x):
             for row in range(y):
                 im = tiles[col*y+row]
-                predicted_values = self.add_arrows(img=im, ax=ax, col=col, row=row,dim_factor=dim_factor)
+                predicted_values = self.add_arrows(img=im, ax=ax, col=col, row=row)
             
                 x_origin=predicted_values[0] 
                 y_origin=predicted_values[1] 
@@ -166,7 +166,6 @@ class Predictor:
     
     def get_prediction_image(self, image_path, pix_dim):
         pix_factor = 10/pix_dim
-
         if type(image_path)==str:
             image = cv2.imread(image_path)
         else:
@@ -183,4 +182,4 @@ class Predictor:
     
 if __name__ == '__main__':
     predictor = Predictor()
-    predictor.get_prediction_image('raw_data/mars_images/test_image.jpg',5)
+    predictor.get_prediction_image('raw_data/mars_images/Murray-Lab_CTX-Mosaic_beta01_E-038_N-36.tif',5)

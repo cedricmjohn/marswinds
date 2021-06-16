@@ -44,7 +44,9 @@ if st.sidebar.checkbox('Insert side dimension of image'):
 uploaded_file = st.sidebar.file_uploader("Choose a photo of dunes in Mars*")
 
 if uploaded_file:
+    base_image_path = 'website/prediction/base_image.jpg'
     image_1 = imageio.imread(uploaded_file)
+    imageio.imwrite(base_image_path,image_1)
 
 st.sidebar.markdown(f"""
 /* Mandatory field
@@ -78,7 +80,8 @@ if image_1 is not None:
         with st.spinner('Wait for it...'):
             time.sleep(190)
             st.success('Done!')
-        image_pred, data= Predictor().get_prediction_image(image_1, pixel_dim)
+           
+        image_pred, data= Predictor().get_prediction_image(base_image_path, pixel_dim)
         pred_image = Image.open(image_pred)
         st.image(pred_image,caption ='', use_column_width=True)
         st.write(data)
@@ -86,15 +89,6 @@ if image_1 is not None:
         b64 = base64.b64encode(csv.encode()).decode()  # some strings
         link= f'<a href="data:file/csv;base64,{b64}" download="data.csv">Download csv file</a>'
         st.markdown(link, unsafe_allow_html=True)
-            
-#               liste= ['A','B','C']
-#   df_download= pd.DataFrame(liste)
-#   df_download.columns=['Title']
-#   df_download
-#   csv = df_download.to_csv(index=False)
-#   b64 = base64.b64encode(csv.encode()).decode()  # some strings
-# #   linko= f'<a href="data:file/csv;base64,{b64}" download="myfilename.csv">Download csv file</a>'
-#   st.markdown(link, unsafe_allow_html=True)
 else:
     st.markdown('Please upload image and fill information requested.')
 

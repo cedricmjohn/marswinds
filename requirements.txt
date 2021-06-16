@@ -19,3 +19,4 @@ opencv-python
 pillow
 SciPy
 google-cloud-storage
+imageio

@@ -22,7 +22,7 @@ pandas
 matplotlib
 seaborn
 scikit-learn
-keras
+tensorflow
 matplotlib
 mlflow
 netCDF4

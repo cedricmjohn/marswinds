@@ -11,21 +11,26 @@ import joblib
 class Predictor:
     
     def __init__(self):
-        base_folder='../raw_data/trained_models'
+        base_folder='raw_data/trained_models'
         self.regressor = load_model(f'{base_folder}/regressor.h5')
         self.classifier = load_model(f'{base_folder}/classifier.h5')
         self.scaler = joblib.load(f'{base_folder}/scaler.lib')
     
     def prediction_from_models(self, tile):
-        grey_image = cv2.cvtColor(tile, cv2.COLOR_RGB2GRAY) / 255.0
+
+        if len(tile.shape)==3:
+            grey_image = cv2.cvtColor(tile, cv2.COLOR_RGB2GRAY) / 255.0
+        else:
+            grey_image = tile
+
         expanded = np.expand_dims(np.expand_dims(grey_image,axis=0), axis=3)
         class_proba = self.classifier.predict(expanded)[0][0]
     
         if class_proba >= 0.5:
             predicted_regressed = self.regressor.predict(expanded)[0]
             wind_strength = predicted_regressed[0]
-            sin = predicted_regressed[0]
-            cos = predicted_regressed[1]
+            sin = predicted_regressed[1]
+            cos = predicted_regressed[0]
             angle_rad = math.atan2(sin, cos)
         else:
             angle_rad = np.nan
@@ -142,7 +147,7 @@ class Predictor:
                 top=False,         
                 labelbottom=False) 
     
-        plt.savefig('../website/prediction/prediction.jpg', format='jpg')
+        plt.savefig('website/prediction/prediction.jpg', format='jpg')
         
         return results
     
@@ -161,7 +166,12 @@ class Predictor:
     
     def get_prediction_image(self, image_path, pix_dim):
         pix_factor = 10/pix_dim
-        image = cv2.imread(image_path)
+
+        if type(image_path)==str:
+            image = cv2.imread(image_path)
+        else:
+            image = np.asarray(image_path)
+
         dim=(int(image.shape[0]/pix_factor), int(image.shape[1]/pix_factor))
 
         resized_image = cv2.resize(image,dim)
@@ -169,8 +179,8 @@ class Predictor:
         tiles = self.prepare_tiles(resized_image)
         results = self.create_figure(resized_image, tiles[0],tiles[1],tiles[2], dim)
         
-        return ('../website/prediction/prediction.jpg',results)
+        return ('website/prediction/prediction.jpg',results)
     
 if __name__ == '__main__':
     predictor = Predictor()
-    predictor.get_prediction_image('../raw_data/mars_images/test_image.jpg',5)
+    predictor.get_prediction_image('raw_data/mars_images/test_image.jpg',5)

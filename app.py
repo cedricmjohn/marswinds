@@ -6,6 +6,7 @@ import pandas as pd
 from PIL import Image
 import time
 import os
+import cv2
 import base64
 import imageio 
 from marswinds.predict import Predictor
@@ -56,7 +57,6 @@ st.markdown("<h1 style='text-align: center;color: rgb(138, 19, 11);'>Mapping Mar
 #Description text
 
 if image_1 is not None:
-
     def px_dimension():
         if pixel_dimension:
             pixels = pixel_dimension 
@@ -77,18 +77,17 @@ if image_1 is not None:
     #Predict
     prediction = st.button('Predict')
     if prediction:
-        image_pred, data= Predictor().get_prediction_image(base_image_path, pixel_dim)
-        progress = pd.read_csv('website/progress_log.csv')
-        # Add a placeholder
+        # # Add a placeholder
+        'Starting analysis...'
         latest_iteration = st.empty()
         bar = st.progress(0)
-        while i in range(progress['total']):
-             # Update the progress bar with each iteration.
-            latest_iteration.text(f'Image tile {i+1}')
+        for i in range(100):
+  #      Update the progress bar with each iteration.
+            latest_iteration.text(f'Analyzing image {i+1}')
             bar.progress(i + 1)
-            time.sleep(1)
-
-        'Prediction completed'
+            time.sleep(12)
+        'Analysis completed'
+        image_pred, data= Predictor().get_prediction_image(base_image_path, pixel_dim)
 
         #Open image and data after prediction
         pred_image = Image.open(image_pred)

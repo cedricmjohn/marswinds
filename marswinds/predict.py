@@ -112,7 +112,7 @@ class Predictor:
                 "Wind Strength":[],
                 "Wind Direction (degrees)":[]}
             
-        results = pd.DataFrame.from_dict(predictions, index= False)
+        results = pd.DataFrame.from_dict(predictions)
     
         for col in range(x):
             for row in range(y):
@@ -137,7 +137,7 @@ class Predictor:
                     "Wind Strength":[wind_strength],
                     "Wind Direction (degrees)":[angle]}
             
-                results = pd.concat([results, pd.DataFrame.from_dict(prediction, index=False)])
+                results = pd.concat([results, pd.DataFrame.from_dict(prediction)])
 
         
         ax.tick_params(

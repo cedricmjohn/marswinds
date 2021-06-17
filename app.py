@@ -17,9 +17,8 @@ st.set_page_config(layout="wide",
 image_1=None
 pixel_dimension = ''
 imgsize = 256
-#Information
-side= ['Horizontal side', 'Vertical side']
 
+#Information
 
 #logo at the top of page
 image = Image.open('website/ESP_015917_2650.jpg')
@@ -30,7 +29,6 @@ st.sidebar.markdown("""
 # Martian Winds
 Please upload a photo of Mars to predict wind direction
     """)
-
 
 if st.sidebar.checkbox('Insert pixel dimension'):
     pixel_dimension = st.sidebar.number_input('Insert pixel dimension of your image (METERS)', 5.000)
@@ -43,6 +41,7 @@ if st.sidebar.checkbox('Insert side dimension of image'):
     
 uploaded_file = st.sidebar.file_uploader("Choose a photo of dunes in Mars*")
 
+#Show image to be predicted
 if uploaded_file:
     base_image_path = 'website/prediction/base_image.jpg'
     image_1 = imageio.imread(uploaded_file)
@@ -74,18 +73,30 @@ if image_1 is not None:
     pixel_dim = px_dimension()
     
     st.image(uploaded_file, caption=f"Pixel dimension: {pixel_dim} m/px", use_column_width=True)
-    # img = Image.load_img(uploaded_file)
+
+    #Predict
     prediction = st.button('Predict')
     if prediction:
-        with st.spinner('Wait for it...'):
-            time.sleep(190)
-            st.success('Done!')
-           
         image_pred, data= Predictor().get_prediction_image(base_image_path, pixel_dim)
+        progress = pd.read_csv('website/progress_log.csv')
+        # Add a placeholder
+        latest_iteration = st.empty()
+        bar = st.progress(0)
+        while i in range(progress['total']):
+             # Update the progress bar with each iteration.
+            latest_iteration.text(f'Image tile {i+1}')
+            bar.progress(i + 1)
+            time.sleep(1)
+
+        'Prediction completed'
+
+        #Open image and data after prediction
         pred_image = Image.open(image_pred)
         st.image(pred_image,caption ='', use_column_width=True)
         st.write(data)
-        csv=data.to_csv(index=False)
+
+        #Create csv to be downloaded
+        csv=data.to_csv(index=True)
         b64 = base64.b64encode(csv.encode()).decode()  # some strings
         link= f'<a href="data:file/csv;base64,{b64}" download="data.csv">Download csv file</a>'
         st.markdown(link, unsafe_allow_html=True)

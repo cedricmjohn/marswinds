@@ -112,10 +112,15 @@ class Predictor:
                 "Wind Strength":[],
                 "Wind Direction (degrees)":[]}
             
-        results = pd.DataFrame.from_dict(predictions)
+        results = pd.DataFrame.from_dict(predictions, index= False)
     
         for col in range(x):
             for row in range(y):
+
+                d = {'current':[col*row],
+                'total':[x*y]}
+
+                pd.DataFrame.from_dict(d).to_csv('website/progress_log.csv')
                 im = tiles[col*y+row]
                 predicted_values = self.add_arrows(img=im, ax=ax, col=col, row=row,dim_factor=dim_factor)
             
@@ -132,7 +137,7 @@ class Predictor:
                     "Wind Strength":[wind_strength],
                     "Wind Direction (degrees)":[angle]}
             
-                results = pd.concat([results, pd.DataFrame.from_dict(prediction)])
+                results = pd.concat([results, pd.DataFrame.from_dict(prediction, index=False)])
 
         
         ax.tick_params(

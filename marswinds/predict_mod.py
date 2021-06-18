@@ -7,30 +7,31 @@ import math
 from marswinds.utils import radian_to_degree, degree_to_radian
 from tensorflow.keras.models import load_model
 import joblib
+import imageio
 
 class Predictor:
     
-    def __init__(self, probability_threshold = 0.5):
+    def __init__(self):
         base_folder='raw_data/trained_models'
         self.regressor = load_model(f'{base_folder}/regressor.h5')
         self.classifier = load_model(f'{base_folder}/classifier.h5')
         self.scaler = joblib.load(f'{base_folder}/scaler.lib')
-        self.probability_threshold = probability_threshold
     
     def prediction_from_models(self, tile):
-        if len(tile.shape)==3:
-            grey_image = cv2.cvtColor(tile, cv2.COLOR_BGR2GRAY) / 255.0
+        
+        if len(tile.shape)>=3:
+            grey_image = cv2.cvtColor(tile, cv2.COLOR_RGB2GRAY) / 255.0
         else:
-            grey_image = tile / 255.0
-
+            grey_image = tile
+        
         expanded = np.expand_dims(np.expand_dims(grey_image,axis=0), axis=3)
         class_proba = self.classifier.predict(expanded)[0][0]
     
-        if class_proba >= self.probability_threshold:
+        if class_proba <= 0.5:
             predicted_regressed = self.regressor.predict(expanded)[0]
             wind_strength = predicted_regressed[0]
-            sin = predicted_regressed[2]
-            cos = predicted_regressed[1]
+            sin = predicted_regressed[1]
+            cos = predicted_regressed[0]
             angle_rad = math.atan2(sin, cos)
         else:
             angle_rad = np.nan
@@ -42,36 +43,15 @@ class Predictor:
     
         dune_proba, wind_strength_norm, original_angle = self.prediction_from_models(img)
     
-        x_origin = col*256+128
-        y_origin = row*256+128
+        y_origin = col*256+128
+        x_origin = row*256+128
     
-        R=255
-        G=204
-        B=204
-            
-        if(wind_strength_norm>1):
-            print('wind too high')
-        
-        if (wind_strength_norm<=0.2):
-            R=255
-            G=204
-            B=204
-        if (wind_strength_norm>0.2 and wind_strength_norm<=0.5):
-            R=255
-            G=128
-            B=0
-        if (wind_strength_norm>0.5 and wind_strength_norm<=0.7):
-            R=0
-            G=0
-            B=153
-        if (wind_strength_norm>0.7 and wind_strength_norm<=1.0):
-            R=153
-            G=0
-            B=0
-            
-        color = [R/255,G/255,B/255]
+        red_component = wind_strength_norm
+        blue_component= 1 - red_component
     
-        if dune_proba >= self.probability_threshold:
+        color = [red_component, 0, blue_component]
+        color = 'r'
+        if dune_proba <= 0.5:
             original_angle = radian_to_degree(original_angle)
             arrow_length = 100
             if original_angle < 0: original_angle += 360
@@ -119,13 +99,20 @@ class Predictor:
     
     def create_figure(self, image, tiles, x, y, dim):
         
-        dim_factor = 20/dim[0]
+        if dim[0] > dim [1]:
+            dim_factor = 20/dim[0]
+        else:
+            dim_factor = 20/dim[1]
+            
+        dim_1 = dim[0]*dim_factor
         dim_2 = dim[1]*dim_factor
+        
+        print(dim_1)
+        print(dim_2)
     
-        fig,ax = plt.subplots(figsize = (20,dim_2))
-
-        extent = (0,dim[0],0,dim[1])
-        ax.imshow(image, origin='upper', extent = extent, cmap='Greys')
+        fig,ax = plt.subplots(figsize = (dim_1,dim_2))
+    
+        ax.imshow(image, cmap='Greys')
     
         predictions = {"X-position (pixel)":[],
                 "Y-position (pixel)":[],
@@ -135,14 +122,11 @@ class Predictor:
                 "Wind Direction (degrees)":[]}
             
         results = pd.DataFrame.from_dict(predictions)
+    
         for col in range(x):
             for row in range(y):
 
-                d = {'current':[col*row],
-                'total':[x*y]}
-
-                pd.DataFrame.from_dict(d).to_csv('website/progress_log.csv')
-                im = tiles[row*x+col]
+                im = tiles[col*y+row]
                 predicted_values = self.add_arrows(img=im, ax=ax, col=col, row=row,dim_factor=dim_factor)
             
                 x_origin=predicted_values[0] 
@@ -175,6 +159,7 @@ class Predictor:
                 labelbottom=False) 
         ax.set_yticklabels([])
         ax.set_xticklabels([])
+    
         plt.savefig('website/prediction/prediction.jpg', format='jpg')
         
         return results
@@ -182,15 +167,16 @@ class Predictor:
     def prepare_tiles(self, image):
         nb_h_tiles = int((image.shape[0]-image.shape[0]%256)/256)
         nb_v_tiles = int((image.shape[1]-image.shape[1]%256)/256)
-        tiles = []
         
+        tiles = []
+  
         for x in range(nb_h_tiles):
             for y in range(nb_v_tiles):
                 tile = image[x*256:(x+1)*256,y*256:(y+1)*256]
+                print(tile.shape)
                 tiles.append(tile)
-        
-        trimmed_image = image[0:nb_h_tiles*256,0:nb_v_tiles*256]
-        return (trimmed_image,(tiles,nb_h_tiles,nb_v_tiles))
+                
+        return (tiles,nb_h_tiles,nb_v_tiles)
     
     def get_prediction_image(self, image_path, pix_dim):
         pix_factor = 10/pix_dim
@@ -199,22 +185,17 @@ class Predictor:
             image = cv2.imread(image_path)
         else:
             image = np.asarray(image_path)
-            
-        print(f'image shape:{image.shape}')
+
         dim=(int(image.shape[0]/pix_factor), int(image.shape[1]/pix_factor))
 
         resized_image = cv2.resize(image,dim)
 
-        trimmed_image, tiles = self.prepare_tiles(resized_image)
-        trimmed_dims = (trimmed_image.shape[0],trimmed_image.shape[1])
-        results = self.create_figure(trimmed_image, tiles[0],tiles[1],tiles[2], trimmed_dims)
+        tiles = self.prepare_tiles(resized_image)
+        results = self.create_figure(resized_image, tiles[0],tiles[1],tiles[2], dim)
         
         return ('website/prediction/prediction.jpg',results)
     
 if __name__ == '__main__':
     predictor = Predictor()
-    image = cv2.imread('raw_data/mars_images/Murray-Lab_CTX-Mosaic_beta01_E-038_N-36.jpg')
-    #image = cv2.imread('raw_data/images/testing/dunes/21.8424991607666_50.2474983215332_031_CW000_-0.6031867265701294_-0.6447361707687378_1.9967776536941528.jpg')
-    #image = cv2.imread('raw_data/mars_images/Mars_small_new.jpg')
-    path,df = predictor.get_prediction_image(image,10)
-    print(df)
+    image = imageio.imread('raw_data/mars_images/Blue-Dunes-on-Mars_r.jpg')
+    predictor.get_prediction_image(image,10)

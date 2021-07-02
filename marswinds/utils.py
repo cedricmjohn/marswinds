@@ -2,12 +2,30 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+import random, os
 
 def radian_to_degree(rad_angle):
     return rad_angle * 180 / math.pi
 
 def degree_to_radian(deg_angle):
     return deg_angle / 180 * math.pi
+
+def decode_angle(image_name):
+    label = image_name.split('/')[-1]
+    original_sin = float(label.split('_')[-3])
+    original_cos = float(label.split('_')[-2])
+    original_angle = math.atan2(original_sin, original_cos)
+    original_angle *= 180 / math.pi
+    if original_angle < 0: original_angle += 360
+    
+    return original_angle
+
+def encode_angle(new_angle):
+    if new_angle > 360: new_angle -= 360
+    rad_angle = math.pi * new_angle / 180
+    new_sin = np.sin(rad_angle)
+    new_cos = np.cos(rad_angle)
+    return (new_sin, new_cos)
 
 def plot_image(folder_name='training',image_type='dunes', image_name=None, ax=None):
     
@@ -17,8 +35,10 @@ def plot_image(folder_name='training',image_type='dunes', image_name=None, ax=No
     folder_path = f'../images/{folder_name}/{image_type}'
     if image_name == None:
         image_name = random.choice(os.listdir(folder_path))
+        path = f'{folder_path}/{image_name}'
+    else:
+        path = f'{folder_name}/{image_name}'
         
-    path = f'{folder_path}/{image_name}'
         
     data = image_name.split('_')
     wind_strength = float(data[-1].split('.')[0])
@@ -62,6 +82,7 @@ def plot_image(folder_name='training',image_type='dunes', image_name=None, ax=No
         tail_x = 128+adj
         tail_y = 128+op
 
+    print(path)
     img = cv2.imread(path)
 
     ax.imshow(img, cmap='Greys')

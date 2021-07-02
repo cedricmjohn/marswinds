@@ -3,11 +3,13 @@ import xarray as xr
 import numpy as np
 import math
 import glob, os
+from tqdm import tqdm
 from os import listdir
 from os.path import isfile, join
 import cv2
 from marswinds.satellite_data import SatelliteData
 from marswinds.wind_data import WindData
+from marswinds.utils import decode_angle, encode_angle
 import datetime
     
 
@@ -158,7 +160,7 @@ class DataPreparation:
             print(f'No rotation applied (check if the {mypath} is empty)')
             return self
         
-        for image_name in list_of_images:
+        for image_name in tqdm(list_of_images):
             if image_name.split('.')[-1]=='jpg':
                 self.apply_rotation(f'{mypath}/{image_name}')
         return self
@@ -169,20 +171,13 @@ class DataPreparation:
                            (cv2.cv2.ROTATE_180,180,'CW180'),
                            (cv2.cv2.ROTATE_90_COUNTERCLOCKWISE,270,'CW270')]
         
+        original_angle = decode_angle(image_name)
         label = image_name.split('/')[-1]
-        original_sin = float(label.split('_')[-3])
-        original_cos = float(label.split('_')[-2])
-        original_angle = math.atan2(original_sin, original_cos)
-        original_angle *= 180 / math.pi
-        if original_angle < 0: original_angle += 360
         
         for rotation in rotation_values:
             rota = rotation[1]
             new_angle = original_angle + rota
-            if new_angle > 360: original_angle -= 360
-            rad_angle = math.pi * new_angle / 180
-            new_sin = np.sin(rad_angle)
-            new_cos = np.cos(rad_angle)
+            new_sin, new_cos = encode_angle(new_angle)
             name_tags = label.split('_')
             name_tags[-4] = rotation[2]
             name_tags[-3] = str(new_sin)
@@ -194,14 +189,53 @@ class DataPreparation:
             new_image = cv2.rotate(image, rotation[0])
             cv2.imwrite(image_path,new_image)
         return self
+    
+    def flip_images(self):
+        base_path = '../raw_data/images/training'
+        
+        mypath=f'{base_path}/{self.image_type}'
+        try:
+            list_of_images =  [f for f in listdir(mypath) if isfile(join(mypath, f))]
+            print(f'Now flipping {len(list_of_images)} images')
+        except:
+            print(f'No images flipped (check if the {mypath} is empty)')
+            return self
+        
+        for image_name in tqdm(list_of_images):
+            if image_name.split('.')[-1]=='jpg':
+                self.apply_flip(f'{mypath}/{image_name}')
+        return self
+    
+    def apply_flip(self, image_name):
+        image = cv2.imread(image_name)
+        
+        original_angle = decode_angle(image_name)
+        label = image_name.split('/')[-1]
+
+        new_angle = 360-original_angle
+        new_sin, new_cos = encode_angle(new_angle)
+        name_tags = label.split('_')
+        name_tags[-5] = f'{name_tags[-5]}F'
+        name_tags[-3] = str(new_sin)
+        name_tags[-2] = str(new_cos)
+        image_label = "_".join(name_tags)
+        path_tags = image_name.split('/')
+        path_tags[-1] = image_label
+        image_path = '/'.join(path_tags)
+        new_image = cv2.flip(image, 1)
+        cv2.imwrite(image_path,new_image)
+        
+        return self
+    
             
         
     
     
 if __name__ == '__main__':
-    data_handler = DataPreparation(image_type='dunes', # replace by no_dunes for rocks
+    data_handler = DataPreparation(image_type='no_dunes', # replace by no_dunes for rocks
                                    force_download=False) # replace by True if you want to delete image previously downloaded
     #data_handler.fetch_all_data()
+    data_handler.flip_images()
     data_handler.rotate_images()
     #data_handler.rotate_images()
     

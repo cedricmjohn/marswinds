@@ -35,13 +35,11 @@ class SatelliteData:
     def get_one_image(self,long:float, lat:float,quadrant:int, **kwargs) -> list:
     
         ee.Initialize()
-        if 'resolution' in kwargs.keys():
-            resolution=int(kwargs['resolution'])
-        else:
-            resolution = 256
+        resolution = int(kwargs.get('resolution', 256))
+        bounds = float(kwargs.get('bounds', 0.0125))
     
-        area = [(long-0.0125,lat-0.0125),
-            (long+0.0125,lat+0.0125)]  
+        area = [(long-bounds,lat-bounds),
+            (long+bounds,lat+bounds)]  
         
         image_name = f"{lat}_{long}_0{quadrant}_CW000_{self.data.sin}_{self.data.cos}_{self.data.wind_strength}"
         folder_name = f"../raw_data/images/{self.data.folder}/{self.data.image_type}"

@@ -7,8 +7,8 @@ from tqdm import tqdm
 from os import listdir
 from os.path import isfile, join
 import cv2
-from marswinds.satellite_data import SatelliteData
-from marswinds.wind_data import WindData
+from marswinds.data.satellite_data import SatelliteData
+from marswinds.data.wind_data import WindData
 from marswinds.utils import decode_angle, encode_angle
 import datetime
     
@@ -117,8 +117,30 @@ class DataPreparation:
             
         return self                 
     
-    def fetch_wind_only(self):
-        df = pd.read_csv(f'../raw_data/lists/{self.image_type}.csv')
+    def fetch_wind_only(self,labels_df=None):
+        
+        if labels_df is not None:
+            north = round(labels_df['latitude'].max(),2)
+            south = round(labels_df['latitude'].min(),2)
+            if north-south<0.1:
+                north+=0.1
+            east = round(labels_df['longitude'].max(),2)
+            west = round(labels_df['longitude'].min(),2)
+            if east-west<0.1:
+                west+=0.1
+            region = 'From predictions'
+            
+            d = {
+                'region':[region],
+                'north':[north],	
+                'west':[west],
+                'south':[south],
+                'east':[east]}
+            
+            df = pd.DataFrame.from_dict(d)
+            
+        else:
+            df = pd.read_csv(f'../raw_data/lists/{self.image_type}.csv')
         
         if self.nb_lines:
             coordinates = df.head(self.nb_lines).copy()
@@ -140,7 +162,7 @@ class DataPreparation:
                                  image_type=self.image_type) \
                         .get_data_one_region() \
                         .prep_data()
-        return self
+        return wind_data
     
     def fetch_images_only(self, file_name=None):
         wind_data = WindData(file_name).prep_data()

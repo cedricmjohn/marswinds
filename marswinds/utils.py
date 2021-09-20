@@ -10,13 +10,17 @@ def radian_to_degree(rad_angle):
 def degree_to_radian(deg_angle):
     return deg_angle / 180 * math.pi
 
+def sin_cos_to_degrees(angular_sin, angular_cos):
+    original_angle = radian_to_degree(math.atan2(angular_sin, angular_cos))
+    if original_angle < 0: original_angle += 360
+    
+    return original_angle
+
 def decode_angle(image_name):
     label = image_name.split('/')[-1]
     original_sin = float(label.split('_')[-3])
     original_cos = float(label.split('_')[-2])
-    original_angle = math.atan2(original_sin, original_cos)
-    original_angle *= 180 / math.pi
-    if original_angle < 0: original_angle += 360
+    original_angle = sin_cos_to_degrees(original_sin, original_cos)
     
     return original_angle
 

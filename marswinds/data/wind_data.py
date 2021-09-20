@@ -104,6 +104,4 @@ class WindData:
         val_data.loc[:,'folder']='validation'
 
         return pd.concat([train_data,test_data,val_data])
-        
-
 

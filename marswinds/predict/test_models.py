@@ -33,6 +33,22 @@ class TestModelPredictions(Predictor):
         if angle_diff > 180: angle_diff = 360-angle_diff
         
         return angle_diff
+    
+    def compute_RMSE(diff):
+        return np.sqrt(np.mean(diff**2))
+    
+    def compute_classification_metrics(df):
+        
+        tp = df[(df.is_dune == df.dune_label) & (df.is_dune_label == 1)].shape[0]
+        tn = df[(df.is_dune == df.dune_label) & (df.is_dune_label == 0)].shape[0]
+        fp = df[(df.is_dune != df.dune_label) & (df.is_dune_label == 1)].shape[0]
+        fn = df[(df.is_dune != df.dune_label) & (df.is_dune_label == 0)].shape[0]
+        
+        precision = tp/(tp+fp)
+        recall = (tp+tn)/(tp+fp+tn+fp)
+        
+        return (precision, recall)
+        
 
     def compute_metrics(self, file_path):
         results = pd.read_csv(file_path)
@@ -43,11 +59,11 @@ class TestModelPredictions(Predictor):
                 diff = self.calculate_angular_diff(result.angle_label, result.angle)
                 results.loc[index, 'angular_diff'] = diff
             
-        
+        precision, recall = self.compute_classification_metrics(results)
+        rmse = self.compute_RMSE(results.angular_diff)
     
-     
     
-        return pd.read_csv(self.log_name)
+        return (precision, recall, rmse)
 
 
     def plot_rand_image_grid(self,grid_dim=5,image_dim=3, 
@@ -150,5 +166,5 @@ if __name__ == '__main__':
     tester = TestModelPredictions(probability_threshold=0.5)
     tester.save_tiled_data(image, coordinates=(32.7982115,-106.3750148),label_wind=False)
     tester.test_from_file(image, labels=labels, coordinates=(32.7982115,-106.3750148))
-    tester.tile_and_label(pred)
+    #tester.tile_and_label(pred)
 

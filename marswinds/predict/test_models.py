@@ -162,9 +162,9 @@ if __name__ == '__main__':
     pred = '../raw_data/earth_images/predictions_landsat-106.473427_32.923187_-106.27342700000001_33.123187.png/predictions.csv'
     #image = '../raw_data/mars_images/alt/Mars_small_new.jpg'
     #path,df = predictor.get_prediction_image(image,10)
-    #predictor.predict_from_file('../raw_data/earth_images/landsat-106.473427_32.923187_-106.27342700000001_33.123187.png')
     tester = TestModelPredictions(probability_threshold=0.5)
-    tester.save_tiled_data(image, coordinates=(32.7982115,-106.3750148),label_wind=False)
-    tester.test_from_file(image, labels=labels, coordinates=(32.7982115,-106.3750148))
+    #tester.predict_from_file(image)
+    #tester.save_tiled_data(image, coordinates=(32.7982115,-106.3750148),label_wind=False)
+    tester.test_from_file(image, labels=labels, coordinates=(32.7982115,-106.3750148),label_wind=False)
     #tester.tile_and_label(pred)
 

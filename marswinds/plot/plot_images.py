@@ -98,7 +98,7 @@ class PredictionImage():
         arrow_length = 100
         if original_angle < 0: original_angle += 360
         if original_angle >360: original_angle -+360
-    
+        
         if (original_angle<=90):
             arr_angle = degree_to_radian(original_angle)
             adj = np.cos(arr_angle)*arrow_length
@@ -107,7 +107,7 @@ class PredictionImage():
             dy = -adj*2
             tail_x = x_origin-op
             tail_y = adj+y_origin
-        if (original_angle<=180) & (original_angle>=90):
+        if (original_angle<=180) & (original_angle>90):
             arr_angle = degree_to_radian(original_angle-90)
             adj = np.cos(arr_angle)*arrow_length
             op = np.sin(arr_angle)*arrow_length
@@ -115,7 +115,7 @@ class PredictionImage():
             dy = op*2
             tail_x = x_origin-adj
             tail_y = y_origin-op
-        if (original_angle<=270) & (original_angle>=180):
+        if (original_angle<=270) & (original_angle>180):
             arr_angle = degree_to_radian(original_angle-180)
             adj = np.cos(arr_angle)*arrow_length
             op = np.sin(arr_angle)*arrow_length
@@ -123,7 +123,7 @@ class PredictionImage():
             dy = adj*2
             tail_x = x_origin+op
             tail_y = y_origin-adj
-        if (original_angle<=360) & (original_angle>=270):
+        if (original_angle<=360) & (original_angle>270):
             arr_angle = degree_to_radian(original_angle-270)
             adj = np.cos(arr_angle)*arrow_length
             op = np.sin(arr_angle)*arrow_length
@@ -131,9 +131,13 @@ class PredictionImage():
             dy = -op*2
             tail_x = x_origin+adj
             tail_y = y_origin+op
-        ax.arrow(tail_x,tail_y,dx,dy,color=color,
+        try:
+            ax.arrow(tail_x,tail_y,dx,dy,color=color,
             length_includes_head=True,
             width=20,alpha=.6)
+        except Exception as e:
+            print(f'The following error was raised when trying to plot arrows:{e.args}')
+            print(f'The predicted angle is:{original_angle}')
 
         return self
     

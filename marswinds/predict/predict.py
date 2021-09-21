@@ -59,7 +59,7 @@ class Predictor:
             angle_rad = np.nan
             wind_strength = np.nan
         
-        return (class_proba,wind_strength, angle_rad)
+        return (class_proba,wind_strength, radian_to_degree(angle_rad))
     
     
     def open_and_scale_image(self,image_path, pix_dim):
@@ -308,7 +308,7 @@ class Predictor:
                     "is_dune":[is_dune],   
                     "probability":[dune_proba],
                     "strength":[wind_strength],
-                    "angle":[radian_to_degree(angle)]}
+                    "angle":[angle]}
             
                 results = pd.concat([results, pd.DataFrame.from_dict(prediction)])
                 

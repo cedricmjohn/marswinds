@@ -20,3 +20,4 @@ pillow
 SciPy
 google-cloud-storage
 imageio
+geemap
